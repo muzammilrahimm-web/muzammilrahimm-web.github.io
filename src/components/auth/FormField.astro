@@ -1,0 +1,20 @@
+---
+// FormField: a labelled input (or textarea) with an error message area.
+// Use type="textarea" for a multi-line message box.
+// Any extra props (required, minlength, autocomplete...) are passed to the field.
+const { id, label, type = 'text', hint, ...inputProps } = Astro.props;
+const describedBy = [`${id}-error`, hint && `${id}-hint`].filter(Boolean).join(' ');
+---
+
+<div class="field">
+  <label for={id}>{label}</label>
+  {
+    type === 'textarea' ? (
+      <textarea id={id} name={id} class="input" data-label={label} aria-describedby={describedBy} {...inputProps} />
+    ) : (
+      <input id={id} name={id} type={type} class="input" data-label={label} aria-describedby={describedBy} {...inputProps} />
+    )
+  }
+  {hint && <p class="field-hint" id={`${id}-hint`}>{hint}</p>}
+  <p class="field-error" id={`${id}-error`} aria-live="polite"></p>
+</div>

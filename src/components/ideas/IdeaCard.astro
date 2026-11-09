@@ -1,0 +1,38 @@
+---
+// IdeaCard: Pinterest-style card for one design idea. The whole card links
+// to the idea page. (The "Load more" script in IdeaBrowser.astro builds the
+// same HTML, so keep the two in sync if you change this markup.)
+import { Image } from 'astro:assets';
+import '../../styles/ideas.css';
+import { ideaUrl, ideaMeta } from '../../lib/ideas.js';
+import { typeLabel } from '../../data/ideas.js';
+import { getCategory } from '../../data/content.js';
+
+const { idea, badge, headingLevel = 3, loading = 'lazy', showCategory = false } = Astro.props;
+const { data } = idea;
+const Heading = `h${headingLevel}`;
+const badgeText = badge ?? (showCategory ? getCategory(data.category)?.name : undefined);
+---
+
+<article class="idea-card" data-idea>
+  <a class="idea-card__link" href={ideaUrl(idea)}>
+    <div class="idea-card__media">
+      <Image
+        src={data.cover}
+        alt={data.coverAlt}
+        widths={[400, 600, 900]}
+        sizes="(min-width: 1024px) 380px, (min-width: 560px) 50vw, 100vw"
+        loading={loading}
+      />
+      {badgeText && <span class="idea-card__badge">{badgeText}</span>}
+    </div>
+    <div class="idea-card__body">
+      <span class="idea-card__meta">{ideaMeta(data)}</span>
+      <Heading class="idea-card__title">{data.title}</Heading>
+      <p class="idea-card__excerpt">{data.description}</p>
+      <ul class="idea-card__tags" aria-label="Idea types">
+        {data.types.slice(0, 3).map((t) => <li>{typeLabel(t)}</li>)}
+      </ul>
+    </div>
+  </a>
+</article>

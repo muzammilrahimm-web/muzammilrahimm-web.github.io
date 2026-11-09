@@ -1,0 +1,105 @@
+---
+// IdeasArchive: simple page-by-page list of all ideas in a category
+// (/<category>/ideas, /<category>/ideas/page/2 ...).
+// It's a browsing fallback (works without JavaScript), so it is marked
+// "noindex" and left out of the sitemap to avoid thin/duplicate pages in Google.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import IdeaCard from './IdeaCard.astro';
+import '../../styles/ideas.css';
+
+const { category, ideas, page, totalPages } = Astro.props;
+const base = `/${category.slug}/ideas`;
+const pageUrl = (n) => (n === 1 ? base : `${base}/page/${n}`);
+const titleSuffix = page > 1 ? ` (Page ${page})` : '';
+---
+
+<BaseLayout
+  title={`All ${category.name} Design Ideas${titleSuffix}`}
+  description={`Browse every ${category.name.toLowerCase()} design idea on Nestora, page ${page} of ${totalPages}.`}
+  noindex="follow"
+>
+  <section class="section archive">
+    <div class="container">
+      <nav class="archive__crumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a> / <a href={category.href}>{category.title}</a> / <span>All ideas</span>
+      </nav>
+      <h1 class="archive__title">All {category.name.toLowerCase()} design ideas</h1>
+      <p class="lead">Page {page} of {totalPages}. For filters and search, visit the <a href={`${category.href}#ideas`}>{category.title}</a> page.</p>
+
+      <div class="idea-masonry archive__grid">
+        {ideas.map((idea, i) => <IdeaCard idea={idea} headingLevel={2} loading={i < 3 ? 'eager' : 'lazy'} />)}
+      </div>
+
+      {
+        totalPages > 1 && (
+          <nav class="pagination" aria-label="Pagination">
+            {page > 1 && <a class="btn btn--ghost btn--sm" href={pageUrl(page - 1)} rel="prev">← Previous</a>}
+            <ol>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                <li>
+                  {n === page ? (
+                    <span aria-current="page">{n}</span>
+                  ) : (
+                    <a href={pageUrl(n)}>{n}</a>
+                  )}
+                </li>
+              ))}
+            </ol>
+            {page < totalPages && <a class="btn btn--ghost btn--sm" href={pageUrl(page + 1)} rel="next">Next →</a>}
+          </nav>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .archive__crumbs {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .archive__crumbs a {
+    color: var(--ink-soft);
+  }
+
+  .archive__title {
+    margin-block: var(--space-sm);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+  }
+
+  .archive__grid {
+    margin-top: var(--space-lg);
+  }
+
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: var(--space-lg);
+  }
+
+  .pagination ol {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pagination a,
+  .pagination span {
+    display: inline-grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    text-decoration: none;
+  }
+
+  .pagination span[aria-current] {
+    background: var(--sage-dark);
+    color: var(--white);
+  }
+</style>

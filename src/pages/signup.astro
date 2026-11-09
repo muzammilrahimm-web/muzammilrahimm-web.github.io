@@ -1,0 +1,83 @@
+---
+// /signup: Sign up form (FRONTEND ONLY, no real accounts are created).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AuthShell from '../components/auth/AuthShell.astro';
+import FormField from '../components/auth/FormField.astro';
+import PasswordField from '../components/auth/PasswordField.astro';
+import image from '../assets/images/bright-living-room.jpg';
+---
+
+<BaseLayout
+  title="Sign Up"
+  description="Create a Nestora account to save your favourite home decor and organization ideas. Accounts are coming soon."
+  noindex
+>
+  <AuthShell
+    title="Create your account"
+    intro="Save favourite ideas and build your own home plan."
+    image={image}
+    imageAlt="Bright living room with a blue sofa, white chair, plants and tall windows above a herringbone wood floor"
+    quote="Simple ideas for beautiful, organized and comfortable living."
+  >
+    <form
+      class="auth-form"
+      method="post"
+      novalidate
+      data-validate
+      data-success-message="Your details look good. Accounts aren't available yet, so no account was created and nothing was sent or saved."
+    >
+      <FormField id="fullName" label="Full name" autocomplete="name" required />
+      <FormField id="email" label="Email address" type="email" autocomplete="email" placeholder="you@example.com" required />
+      <PasswordField
+        id="password"
+        label="Password"
+        autocomplete="new-password"
+        required
+        minlength="8"
+        pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}"
+        data-pattern-message="Use at least 8 characters, including a letter and a number."
+        hint="At least 8 characters, including a letter and a number."
+      />
+      <PasswordField
+        id="confirmPassword"
+        label="Confirm password"
+        autocomplete="new-password"
+        required
+        data-match="password"
+      />
+
+      <div class="field">
+        <label class="checkbox" for="terms">
+          <input
+            id="terms"
+            name="terms"
+            type="checkbox"
+            required
+            data-required-message="Please agree to the Terms and Privacy Policy to continue."
+            aria-describedby="terms-error"
+          />
+          <span>I agree to the <a href="/terms">Terms and Conditions</a> and <a href="/privacy">Privacy Policy</a>.</span>
+        </label>
+        <p class="field-error" id="terms-error" aria-live="polite"></p>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block">Create Account</button>
+      <p class="form-status" data-form-status role="status" hidden></p>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
+  </AuthShell>
+</BaseLayout>
+
+<style>
+  .auth-form {
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  .auth-switch {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+</style>

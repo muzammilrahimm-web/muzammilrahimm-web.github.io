@@ -1,0 +1,93 @@
+---
+// CategoryCard: image card linking to a category page (Bedroom, Kitchen, etc.).
+import { Image } from 'astro:assets';
+
+const { title, blurb, href, image, alt } = Astro.props;
+---
+
+<article class="category-card">
+  <div class="category-card__media">
+    <Image src={image} alt={alt} widths={[400, 600, 900]} sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" />
+  </div>
+  <div class="category-card__body">
+    <h3>
+      <a href={href} class="category-card__link">{title}</a>
+    </h3>
+    <p>{blurb}</p>
+    <span class="category-card__more" aria-hidden="true">
+      Explore
+      <svg width="16" height="16" viewBox="0 0 24 24">
+        <path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+  </div>
+</article>
+
+<style>
+  .category-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--ivory-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+
+  .category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+  }
+
+  .category-card__media {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: var(--beige);
+  }
+
+  .category-card__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s var(--ease);
+  }
+
+  .category-card:hover .category-card__media :global(img) {
+    transform: scale(1.04);
+  }
+
+  .category-card__body {
+    display: grid;
+    gap: 0.5rem;
+    padding: var(--space-md);
+  }
+
+  .category-card__body p {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .category-card__link {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  /* Makes the whole card clickable while keeping one accessible link */
+  .category-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .category-card__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--sage-dark);
+  }
+</style>

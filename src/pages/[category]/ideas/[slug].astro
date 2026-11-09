@@ -1,0 +1,496 @@
+---
+// Individual design idea page: /<category>/ideas/<idea-file-name>
+// One page is created automatically for every file in src/content/ideas.
+import { Image, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/SectionHeading.astro';
+import ArticleCard from '../../../components/ArticleCard.astro';
+import IdeaCard from '../../../components/ideas/IdeaCard.astro';
+import ColorPalette from '../../../components/ideas/ColorPalette.astro';
+import ShareLinks from '../../../components/ideas/ShareLinks.astro';
+import { SITE } from '../../../config/site.js';
+import { getCategory } from '../../../data/content.js';
+import { typeLabel, sizeLabel, budgetLabel } from '../../../data/ideas.js';
+import { getIdeas, getRelatedIdeas, ideaSlug } from '../../../lib/ideas.js';
+import { getPosts, toCardProps, formatDate } from '../../../lib/blog.js';
+import '../../../styles/ideas.css';
+
+export async function getStaticPaths() {
+  const ideas = await getIdeas();
+  return ideas.map((idea) => ({
+    params: { category: idea.data.category, slug: ideaSlug(idea) },
+    props: { idea, allIdeas: ideas },
+  }));
+}
+
+const { idea, allIdeas } = Astro.props;
+const { data } = idea;
+const { Content } = await render(idea);
+const category = getCategory(data.category);
+
+const related = getRelatedIdeas(allIdeas, idea, 3);
+const relatedPosts = (await getPosts()).filter((p) => p.data.category === data.category).slice(0, 3);
+
+const base = Astro.site ?? SITE.url;
+const pageURL = new URL(Astro.url.pathname, base).href;
+const shareImage = new URL((await getImage({ src: data.cover, width: 1200, format: 'jpg' })).src, base).href;
+const isoDate = data.pubDate.toISOString().slice(0, 10);
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: data.title,
+    description: data.description,
+    image: shareImage,
+    datePublished: data.pubDate.toISOString(),
+    dateModified: (data.updatedDate ?? data.pubDate).toISOString(),
+    articleSection: category.title,
+    keywords: [data.designStyle, ...data.types.map(typeLabel)].join(', '),
+    mainEntityOfPage: pageURL,
+    author: { '@type': 'Organization', name: SITE.name },
+    publisher: { '@type': 'Organization', name: SITE.name },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', base).href },
+      { '@type': 'ListItem', position: 2, name: category.title, item: new URL(category.href, base).href },
+      { '@type': 'ListItem', position: 3, name: data.title, item: pageURL },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.description}
+  image={data.cover}
+  type="article"
+  article={{ publishedTime: data.pubDate, modifiedTime: data.updatedDate, section: category.title }}
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(schema)} />
+
+  <article class="idea" style={`--cat-tint:${category.theme.tint};--cat-deep:${category.theme.deep}`}>
+    <!-- Header: big image + key details -->
+    <header class="idea__header">
+      <div class="container">
+        <nav class="idea__crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li><a href={category.href}>{category.title}</a></li>
+            <li><a href={`${category.href}#ideas`}>Ideas</a></li>
+          </ol>
+        </nav>
+
+        <div class="idea__hero">
+          <figure class="idea__cover">
+            <Image
+              src={data.cover}
+              alt={data.coverAlt}
+              widths={[600, 900, 1200, 1600]}
+              sizes="(min-width: 1024px) 60vw, 100vw"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </figure>
+
+          <div class="idea__intro">
+            <a href={category.href} class="eyebrow idea__category">{category.title}</a>
+            <h1 class="idea__title">{data.title}</h1>
+            <p class="idea__lead">{data.description}</p>
+
+            <dl class="idea__facts">
+              <div><dt>Design style</dt><dd>{data.designStyle}</dd></div>
+              <div><dt>Room size</dt><dd>{sizeLabel(data.roomSize)}</dd></div>
+              <div><dt>Budget</dt><dd>{budgetLabel(data.budget)}</dd></div>
+              <div><dt>Published</dt><dd><time datetime={isoDate}>{formatDate(data.pubDate)}</time></dd></div>
+            </dl>
+
+            <ul class="idea-chips" aria-label="Idea types">
+              {data.types.map((t) => (
+                <li><a class="idea-chip" href={`${category.href}?type=${t}#ideas`}>{typeLabel(t)}</a></li>
+              ))}
+            </ul>
+
+            <ShareLinks url={pageURL} title={data.title} image={shareImage} />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container idea__layout">
+      <!-- Main description -->
+      <div class="idea__body">
+        <Content />
+
+        {
+          data.before && (
+            <section class="idea__before" aria-labelledby="before-title">
+              <h2 id="before-title">Before &amp; after</h2>
+              <div class="idea__before-grid">
+                <figure>
+                  <Image src={data.before.image} alt={data.before.alt} widths={[400, 800]} sizes="(min-width: 768px) 40vw, 100vw" />
+                  <figcaption>Before</figcaption>
+                </figure>
+                <figure>
+                  <Image src={data.cover} alt={data.coverAlt} widths={[400, 800]} sizes="(min-width: 768px) 40vw, 100vw" />
+                  <figcaption>After</figcaption>
+                </figure>
+              </div>
+            </section>
+          )
+        }
+      </div>
+
+      <!-- Sidebar: palette, suggestions, tips -->
+      <aside class="idea__aside">
+        <section class="idea__panel" aria-labelledby="palette-title">
+          <h2 id="palette-title" class="idea__panel-title">Color palette</h2>
+          <ColorPalette colors={data.palette} />
+        </section>
+
+        <section class="idea__panel" aria-labelledby="suggestions-title">
+          <h2 id="suggestions-title" class="idea__panel-title">Furniture &amp; decor suggestions</h2>
+          <ul class="idea__checklist">
+            {data.suggestions.map((s) => <li>{s}</li>)}
+          </ul>
+        </section>
+
+        <section class="idea__panel idea__panel--tint" aria-labelledby="tips-title">
+          <h2 id="tips-title" class="idea__panel-title">Organization tips</h2>
+          <ol class="idea__tips">
+            {data.tips.map((t) => <li>{t}</li>)}
+          </ol>
+        </section>
+      </aside>
+    </div>
+
+    <div class="container">
+      <aside class="idea__cta" aria-label="More from this category">
+        <span class="eyebrow">Keep exploring</span>
+        <p class="idea__cta-title">More {category.name.toLowerCase()} design ideas</p>
+        <a href={`${category.href}#ideas`} class="btn btn--primary">Browse {category.title}</a>
+      </aside>
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="section section--beige" aria-labelledby="related-ideas-title">
+        <div class="container">
+          <SectionHeading eyebrow="You may also like" title="Related design ideas" id="related-ideas-title" />
+          <div class="idea-masonry">
+            {related.map((r) => <IdeaCard idea={r} showCategory={r.data.category !== data.category} />)}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    relatedPosts.length > 0 && (
+      <section class="section" aria-labelledby="related-posts-title">
+        <div class="container">
+          <SectionHeading eyebrow="From the blog" title="Related articles" id="related-posts-title" />
+          <div class="grid grid--3">
+            {relatedPosts.map((p) => <ArticleCard {...toCardProps(p)} />)}
+          </div>
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .idea__header {
+    padding-block: var(--space-md) var(--space-xl);
+    background: linear-gradient(to bottom, var(--cat-tint) 0%, var(--cat-tint) 70%, var(--ivory) 70%);
+  }
+
+  .idea__crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: var(--space-md);
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+  }
+
+  .idea__crumbs li + li::before {
+    content: '/';
+    margin-right: 0.4rem;
+    color: var(--ink-soft);
+  }
+
+  .idea__crumbs a {
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .idea__crumbs a:hover {
+    color: var(--sage-dark);
+    text-decoration: underline;
+  }
+
+  .idea__hero {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .idea__cover {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--cat-deep);
+    box-shadow: var(--shadow);
+  }
+
+  .idea__cover :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .idea__intro {
+    display: grid;
+    align-content: start;
+    gap: var(--space-sm);
+  }
+
+  .idea__category {
+    text-decoration: none;
+  }
+
+  .idea__title {
+    font-size: clamp(2.1rem, 4.5vw, 3.2rem);
+  }
+
+  .idea__lead {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+  }
+
+  .idea__facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin: var(--space-xs) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .idea__facts div {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .idea__facts dt {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sage-dark);
+  }
+
+  .idea__facts dd {
+    margin: 0.15rem 0 0;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  @media (min-width: 1024px) {
+    .idea__hero {
+      grid-template-columns: 1.45fr 1fr;
+      gap: var(--space-xl);
+      align-items: start;
+    }
+
+    .idea__cover {
+      position: sticky;
+      top: 96px;
+      max-height: 78vh;
+    }
+
+    .idea__header {
+      background: linear-gradient(to bottom, var(--cat-tint) 0%, var(--cat-tint) 55%, var(--ivory) 55%);
+    }
+  }
+
+  /* ---------- Body + sidebar ---------- */
+  .idea__layout {
+    display: grid;
+    gap: var(--space-xl);
+    padding-top: var(--space-lg);
+  }
+
+  @media (min-width: 1024px) {
+    .idea__layout {
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    }
+  }
+
+  .idea__body {
+    max-width: 68ch;
+    font-size: 1.06rem;
+    line-height: 1.8;
+  }
+
+  .idea__body :global(> * + *) {
+    margin-top: 1.1rem;
+  }
+
+  .idea__body :global(h2) {
+    margin-top: 2.5rem;
+    font-size: clamp(1.7rem, 3vw, 2.1rem);
+  }
+
+  .idea__body :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .idea__body :global(h2 + *) {
+    margin-top: 0.6rem;
+  }
+
+  .idea__body :global(ul),
+  .idea__body :global(ol) {
+    padding-left: 1.4rem;
+  }
+
+  .idea__body :global(li + li) {
+    margin-top: 0.4rem;
+  }
+
+  .idea__body :global(li::marker) {
+    color: var(--sage-dark);
+  }
+
+  .idea__body :global(strong) {
+    font-weight: 600;
+  }
+
+  .idea__aside {
+    display: grid;
+    align-content: start;
+    gap: var(--space-md);
+  }
+
+  .idea__panel {
+    display: grid;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--ivory-soft);
+  }
+
+  .idea__panel--tint {
+    background: var(--cat-tint);
+    border-color: transparent;
+  }
+
+  .idea__panel-title {
+    font-size: 1.45rem;
+  }
+
+  .idea__checklist {
+    display: grid;
+    gap: 0.6rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.95rem;
+  }
+
+  .idea__checklist li {
+    position: relative;
+    padding-left: 1.6rem;
+  }
+
+  .idea__checklist li::before {
+    content: '';
+    position: absolute;
+    left: 0.15rem;
+    top: 0.35em;
+    width: 0.45rem;
+    height: 0.8rem;
+    border: solid var(--sage-dark);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .idea__tips {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: tip;
+    font-size: 0.95rem;
+  }
+
+  .idea__tips li {
+    position: relative;
+    padding-left: 2.2rem;
+    counter-increment: tip;
+  }
+
+  .idea__tips li::before {
+    content: counter(tip);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: var(--sage-dark);
+    color: var(--white);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .idea__before-grid {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  @media (min-width: 640px) {
+    .idea__before-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .idea__before-grid figure {
+    overflow: hidden;
+    border-radius: var(--radius);
+  }
+
+  .idea__before-grid figcaption {
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .idea__cta {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: center;
+    margin: var(--space-xl) auto var(--space-2xl);
+    padding: var(--space-lg) var(--space-md);
+    border-radius: var(--radius-lg);
+    background: var(--cat-tint);
+    text-align: center;
+  }
+
+  .idea__cta-title {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+</style>

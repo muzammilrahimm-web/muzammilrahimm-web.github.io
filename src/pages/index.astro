@@ -1,0 +1,101 @@
+---
+// Homepage (/)
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import CategoryCard from '../components/CategoryCard.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { SITE } from '../config/site.js';
+import { CATEGORIES, POPULAR_IDEAS } from '../data/content.js';
+import { getPosts, toCardProps } from '../lib/blog.js';
+import heroImage from '../assets/images/hero-living-room.jpg';
+
+const latestPosts = (await getPosts()).slice(0, 6);
+
+// Structured data: helps Google understand what this website is.
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.name,
+  url: SITE.url,
+  description: SITE.description,
+  inLanguage: ['en-US', 'en-GB'],
+};
+---
+
+<BaseLayout
+  description="Simple home decor and organization ideas for small bedrooms, kitchens, closets and apartments. Beautiful, organized living for US and UK homes."
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(websiteSchema)} />
+
+  <Hero
+    eyebrow="Home decor & organization"
+    title="Make Every Space Feel Like Home"
+    subtitle="Simple ideas for beautiful, organized and comfortable living."
+    ctaLabel="Explore Ideas"
+    ctaHref="#categories"
+    image={heroImage}
+    imageAlt="Light, neutral living room with a cream bouclé armchair, a beige sofa, two round rattan mirrors and dried pampas grass in a vase"
+  />
+
+  <!-- Featured categories -->
+  <section class="section section--beige" id="categories" aria-labelledby="categories-title">
+    <div class="container">
+      <SectionHeading
+        eyebrow="Explore by room"
+        title="Featured categories"
+        intro="Start with the room that needs the most love. Each guide has simple, practical ideas you can try this week."
+        id="categories-title"
+      />
+      <div class="grid grid--4">
+        {CATEGORIES.map((c) => <CategoryCard title={c.title} blurb={c.blurb} href={c.href} image={c.image} alt={c.alt} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest articles (from src/content/blog) -->
+  <section class="section" aria-labelledby="latest-title">
+    <div class="container">
+      <SectionHeading
+        eyebrow="From the journal"
+        title="Latest articles"
+        intro="Fresh, practical guides to organizing and styling small spaces."
+        id="latest-title"
+      />
+      <div class="grid grid--3">
+        {latestPosts.map((post) => <ArticleCard {...toCardProps(post)} />)}
+      </div>
+      <div class="section-cta">
+        <a href="/blog" class="btn btn--ghost">View all on the blog</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Popular ideas (demo) -->
+  <section class="section section--beige" aria-labelledby="popular-title">
+    <div class="container">
+      <SectionHeading
+        eyebrow="Reader favourites"
+        title="Popular ideas"
+        intro="Three easy places to start making your home calmer and more organized."
+        id="popular-title"
+      >
+        <p class="demo-note">Demo content: sample ideas shown for design purposes.</p>
+      </SectionHeading>
+      <div class="grid grid--3">
+        {POPULAR_IDEAS.map((idea) => <ArticleCard {...idea} />)}
+      </div>
+    </div>
+  </section>
+
+  <Newsletter />
+</BaseLayout>
+
+<style>
+  .section-cta {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-lg);
+  }
+</style>

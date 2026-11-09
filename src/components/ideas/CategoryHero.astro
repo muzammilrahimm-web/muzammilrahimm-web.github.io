@@ -1,0 +1,151 @@
+---
+// CategoryHero: premium hero for category pages, with a photo collage.
+// Uses the category's own tint colour (from src/data/content.js).
+import { Image } from 'astro:assets';
+
+const { category, ideas = [], postCount = 0 } = Astro.props;
+const extra = ideas.slice(0, 2);
+const ideaCount = ideas.length;
+---
+
+<section class="cat-hero">
+  <div class="container cat-hero__inner">
+    <div class="cat-hero__text">
+      <p class="cat-hero__kicker">
+        <span class="cat-hero__number">{category.theme.number}</span>
+        <span class="eyebrow">{category.theme.mood} · Room guide</span>
+      </p>
+      <h1 class="cat-hero__title">{category.title}</h1>
+      <p class="lead">{category.intro}</p>
+      <p class="cat-hero__counts">
+        {ideaCount} design {ideaCount === 1 ? 'idea' : 'ideas'}
+        {postCount > 0 && <> · {postCount} {postCount === 1 ? 'article' : 'articles'}</>}
+      </p>
+      <div class="cat-hero__actions">
+        <a href="#ideas" class="btn btn--primary">Browse design ideas</a>
+        <a href="#tips" class="btn btn--ghost">Quick tips</a>
+      </div>
+    </div>
+
+    <div class:list={['cat-hero__collage', { 'cat-hero__collage--single': extra.length === 0 }]}>
+      <div class="cat-hero__main">
+        <Image src={category.image} alt={category.alt} widths={[480, 800, 1100]} sizes="(min-width: 1024px) 34vw, 70vw" loading="eager" fetchpriority="high" />
+      </div>
+      {
+        extra.map((idea) => (
+          <div class="cat-hero__small">
+            <Image src={idea.data.cover} alt={idea.data.coverAlt} widths={[300, 500]} sizes="(min-width: 1024px) 18vw, 30vw" loading="eager" />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .cat-hero {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--space-xl) var(--space-2xl);
+    background: var(--cat-tint, var(--beige));
+  }
+
+  /* Soft decorative arch in the category's deeper tone */
+  .cat-hero::before {
+    content: '';
+    position: absolute;
+    right: -10%;
+    top: -30%;
+    width: 60vw;
+    max-width: 760px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--cat-deep, var(--beige-deep));
+    opacity: 0.55;
+  }
+
+  .cat-hero__inner {
+    position: relative;
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  .cat-hero__text {
+    display: grid;
+    gap: var(--space-sm);
+    justify-items: start;
+  }
+
+  .cat-hero__kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .cat-hero__number {
+    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--sage-dark);
+  }
+
+  .cat-hero__title {
+    font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+    max-width: 14ch;
+  }
+
+  .cat-hero__counts {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+
+  .cat-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: var(--space-xs);
+  }
+
+  /* Collage: one large photo + two smaller ones */
+  .cat-hero__collage {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: var(--space-sm);
+    height: clamp(320px, 60vw, 560px);
+  }
+
+  .cat-hero__collage--single {
+    grid-template-columns: 1fr;
+  }
+
+  .cat-hero__main {
+    grid-row: 1 / -1;
+  }
+
+  .cat-hero__main,
+  .cat-hero__small {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--cat-deep, var(--beige-deep));
+    box-shadow: var(--shadow);
+  }
+
+  .cat-hero__small:nth-child(3) {
+    border-radius: var(--radius-lg) var(--radius-lg) 120px var(--radius-lg);
+  }
+
+  .cat-hero__collage :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (min-width: 1024px) {
+    .cat-hero__inner {
+      grid-template-columns: 1fr 1.1fr;
+    }
+  }
+</style>

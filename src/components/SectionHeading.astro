@@ -1,0 +1,29 @@
+---
+// SectionHeading: small label + heading + optional intro text.
+// The "id" prop lets the section use aria-labelledby for accessibility.
+const { eyebrow, title, intro, id, align = 'left' } = Astro.props;
+---
+
+<div class:list={['section-heading', `section-heading--${align}`]}>
+  {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+  <h2 id={id}>{title}</h2>
+  {intro && <p class="lead">{intro}</p>}
+  <slot />
+</div>
+
+<style>
+  .section-heading {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  .section-heading--center {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .section-heading--center .lead {
+    margin-inline: auto;
+  }
+</style>

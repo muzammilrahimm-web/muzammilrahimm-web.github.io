@@ -1,0 +1,122 @@
+---
+// Footer: brand summary, link groups and copyright. Shown on every page.
+import Logo from './Logo.astro';
+import { FOOTER_LINKS } from '../config/site.js';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__top">
+      <div class="site-footer__brand">
+        <Logo />
+        <p>
+          Nestora shares simple, practical ideas for beautiful, organized and comfortable homes,
+          for readers in the United States and the United Kingdom.
+        </p>
+      </div>
+
+      {
+        FOOTER_LINKS.map((group) => (
+          <nav class="site-footer__group" aria-label={group.heading}>
+            <h2 class="site-footer__heading">{group.heading}</h2>
+            <ul>
+              {group.links.map((link) => (
+                <li>
+                  <a href={link.href}>{link.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+    </div>
+
+    <div class="site-footer__bottom">
+      <p>&copy; {year} Nestora. All rights reserved.</p>
+      <p>
+        Photography from <a href="https://unsplash.com" rel="noopener" target="_blank">Unsplash</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: auto;
+    padding-top: var(--space-xl);
+    background: var(--beige);
+    border-top: 1px solid var(--line);
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+
+  .site-footer__top {
+    display: grid;
+    gap: var(--space-lg);
+    padding-bottom: var(--space-lg);
+  }
+
+  @media (min-width: 640px) {
+    .site-footer__top {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .site-footer__brand {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .site-footer__top {
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+    }
+
+    .site-footer__brand {
+      grid-column: auto;
+    }
+  }
+
+  .site-footer__brand p {
+    max-width: 36ch;
+    margin-top: var(--space-sm);
+  }
+
+  .site-footer__heading {
+    margin-bottom: 0.85rem;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .site-footer ul {
+    display: grid;
+    gap: 0.55rem;
+    list-style: none;
+    padding: 0;
+  }
+
+  .site-footer a {
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .site-footer a:hover {
+    color: var(--sage-dark);
+    text-decoration: underline;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding-block: var(--space-md);
+    border-top: 1px solid var(--beige-deep);
+    font-size: 0.85rem;
+  }
+</style>

@@ -1,0 +1,304 @@
+---
+// Header: logo, main navigation, search, and Log in / Sign up buttons.
+// On phones and tablets the navigation folds into a menu button.
+import Logo from './Logo.astro';
+import { NAV_LINKS } from '../config/site.js';
+
+// Current page path without a trailing slash, used to highlight the active link.
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+// 'page' for the exact page; 'true' for a section (e.g. Blog while reading an article).
+function currentState(href) {
+  if (currentPath === href) return 'page';
+  if (href !== '/' && currentPath.startsWith(href + '/')) return 'true';
+  return undefined;
+}
+---
+
+<header class="site-header" data-header>
+  <div class="container site-header__bar">
+    <Logo />
+
+    <nav class="site-nav" id="site-nav" aria-label="Main navigation" data-nav>
+      <ul class="site-nav__list">
+        {
+          NAV_LINKS.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                class="site-nav__link"
+                aria-current={currentState(link.href)}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <!-- Account links shown inside the mobile menu -->
+      <div class="site-nav__account">
+        <a href="/login" class="btn btn--ghost">Log in</a>
+        <a href="/signup" class="btn btn--primary">Sign up</a>
+      </div>
+    </nav>
+
+    <div class="site-header__actions">
+      <button
+        type="button"
+        class="icon-btn"
+        aria-label="Open search"
+        aria-expanded="false"
+        aria-controls="site-search"
+        data-search-toggle
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="m20 20-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+      </button>
+      <a href="/login" class="btn btn--ghost btn--sm site-header__desktop-only">Log in</a>
+      <a href="/signup" class="btn btn--primary btn--sm site-header__desktop-only">Sign up</a>
+      <button
+        type="button"
+        class="icon-btn menu-toggle"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        data-menu-toggle
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="menu-toggle__top" d="M4 7h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          <path class="menu-toggle__mid" d="M4 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          <path class="menu-toggle__bot" d="M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search panel: sends the search to the Blog page, which filters articles -->
+  <div class="search-panel" id="site-search" hidden data-search>
+    <div class="container">
+      <form class="search-form" action="/blog" method="get" role="search">
+        <label for="site-search-input" class="visually-hidden">Search Nestora</label>
+        <input
+          id="site-search-input"
+          class="input"
+          type="search"
+          name="q"
+          placeholder="Search ideas, rooms and articles…"
+          autocomplete="off"
+        />
+        <button type="submit" class="btn btn--primary">Search</button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector('[data-header]');
+  const menuBtn = header.querySelector('[data-menu-toggle]');
+  const searchBtn = header.querySelector('[data-search-toggle]');
+  const searchPanel = header.querySelector('[data-search]');
+
+  function setMenu(open) {
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    header.classList.toggle('is-menu-open', open);
+  }
+
+  function setSearch(open) {
+    searchBtn.setAttribute('aria-expanded', String(open));
+    searchBtn.setAttribute('aria-label', open ? 'Close search' : 'Open search');
+    searchPanel.hidden = !open;
+    if (open) searchPanel.querySelector('input').focus();
+  }
+
+  menuBtn.addEventListener('click', () => {
+    const open = menuBtn.getAttribute('aria-expanded') !== 'true';
+    setMenu(open);
+    if (open) setSearch(false);
+  });
+
+  searchBtn.addEventListener('click', () => {
+    const open = searchPanel.hidden;
+    setSearch(open);
+    if (open) setMenu(false);
+  });
+
+  // Close menu/search with the Escape key.
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (!searchPanel.hidden) {
+      setSearch(false);
+      searchBtn.focus();
+    }
+    if (header.classList.contains('is-menu-open')) {
+      setMenu(false);
+      menuBtn.focus();
+    }
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(250, 247, 240, 0.92);
+    backdrop-filter: saturate(1.4) blur(10px);
+    -webkit-backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .site-header__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    min-height: 72px;
+  }
+
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    transition: background-color 0.2s var(--ease);
+  }
+
+  .icon-btn:hover {
+    background: var(--beige);
+  }
+
+  /* ---------- Mobile & tablet: dropdown menu ---------- */
+  .site-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: none;
+    padding: var(--space-sm) var(--space-sm) var(--space-md);
+    background: var(--ivory);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+
+  .is-menu-open .site-nav {
+    display: block;
+  }
+
+  .site-nav__list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .site-nav__link {
+    display: block;
+    padding: 0.85rem 0.25rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 1.05rem;
+    text-decoration: none;
+  }
+
+  .site-nav__link[aria-current] {
+    color: var(--sage-dark);
+    font-weight: 600;
+  }
+
+  .site-nav__account {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: var(--space-md);
+  }
+
+  .site-header__desktop-only {
+    display: none;
+  }
+
+  /* Hamburger turns into an X when open */
+  .menu-toggle path {
+    transition: transform 0.25s var(--ease), opacity 0.2s var(--ease);
+    transform-origin: center;
+  }
+
+  .is-menu-open .menu-toggle__top { transform: translateY(5px) rotate(45deg); }
+  .is-menu-open .menu-toggle__mid { opacity: 0; }
+  .is-menu-open .menu-toggle__bot { transform: translateY(-5px) rotate(-45deg); }
+
+  /* ---------- Desktop: inline navigation ---------- */
+  @media (min-width: 1200px) {
+    .site-nav {
+      position: static;
+      display: block;
+      padding: 0;
+      background: none;
+      border: 0;
+      box-shadow: none;
+    }
+
+    .site-nav__list {
+      display: flex;
+      gap: 0.1rem;
+    }
+
+    .site-nav__link {
+      position: relative;
+      padding: 0.5rem 0.6rem;
+      border: 0;
+      font-size: 0.93rem;
+      white-space: nowrap;
+    }
+
+    .site-nav__link::after {
+      content: '';
+      position: absolute;
+      left: 0.6rem;
+      right: 0.6rem;
+      bottom: 0.2rem;
+      height: 1px;
+      background: currentColor;
+      transform: scaleX(0);
+      transition: transform 0.25s var(--ease);
+    }
+
+    .site-nav__link:hover::after,
+    .site-nav__link[aria-current]::after {
+      transform: scaleX(1);
+    }
+
+    .site-nav__account,
+    .menu-toggle {
+      display: none;
+    }
+
+    .site-header__desktop-only {
+      display: inline-flex;
+    }
+  }
+
+  /* ---------- Search panel ---------- */
+  .search-panel {
+    padding-block: var(--space-sm);
+    border-top: 1px solid var(--line);
+    background: var(--ivory);
+  }
+
+  .search-form {
+    display: flex;
+    gap: 0.6rem;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+</style>

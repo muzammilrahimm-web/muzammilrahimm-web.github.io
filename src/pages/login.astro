@@ -1,0 +1,62 @@
+---
+// /login: Log in form (FRONTEND ONLY, no real sign-in happens).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AuthShell from '../components/auth/AuthShell.astro';
+import FormField from '../components/auth/FormField.astro';
+import PasswordField from '../components/auth/PasswordField.astro';
+import image from '../assets/images/reading-chair.jpg';
+---
+
+<BaseLayout
+  title="Log In"
+  description="Log in to your Nestora account. Accounts are coming soon."
+  noindex
+>
+  <AuthShell
+    title="Welcome back"
+    intro="Log in to see your saved ideas."
+    image={image}
+    imageAlt="Minimal living room with a mustard yellow armchair, brass floor lamp and an abstract black-and-white print on the wall"
+    quote="“Have nothing in your houses that you do not know to be useful, or believe to be beautiful.” (William Morris)"
+  >
+    <form
+      class="auth-form"
+      method="post"
+      novalidate
+      data-validate
+      data-success-message="Your details look good. Log in isn't available yet, so nothing was sent or checked."
+    >
+      <FormField id="email" label="Email address" type="email" autocomplete="email" placeholder="you@example.com" required />
+      <PasswordField id="password" label="Password" autocomplete="current-password" required>
+        <a href="/forgot-password" slot="label-extra" class="auth-small-link">Forgot password?</a>
+      </PasswordField>
+
+      <label class="checkbox" for="remember">
+        <input id="remember" name="remember" type="checkbox" />
+        <span>Remember me</span>
+      </label>
+
+      <button type="submit" class="btn btn--primary btn--block">Log In</button>
+      <p class="form-status" data-form-status role="status" hidden></p>
+    </form>
+
+    <p class="auth-switch">New to Nestora? <a href="/signup">Create an account</a></p>
+  </AuthShell>
+</BaseLayout>
+
+<style>
+  .auth-form {
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  .auth-small-link {
+    font-size: 0.85rem;
+  }
+
+  .auth-switch {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+  }
+</style>

@@ -1,0 +1,45 @@
+---
+// BaseLayout: the shared "frame" for every page (HTML head, header, footer).
+// Pages pass SEO details as props, for example:
+// <BaseLayout title="Kitchen Organization Ideas" description="...">...</BaseLayout>
+import '../styles/global.css';
+import SEO from '../components/SEO.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE } from '../config/site.js';
+
+const { title, description, image, type, noindex = false, article } = Astro.props;
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="theme-color" content="#faf7f0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Fonts: Cormorant Garamond (headings) + Inter (body text) from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap"
+    />
+
+    <SEO title={title} description={description} image={image} type={type} noindex={noindex} article={article} />
+
+    <!-- Extra page-specific tags (e.g. structured data) -->
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <Header />
+    <main id="main-content">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

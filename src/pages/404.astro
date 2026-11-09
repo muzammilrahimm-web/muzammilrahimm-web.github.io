@@ -1,0 +1,25 @@
+---
+// 404 page: shown when a visitor opens a link that does not exist.
+// "noindex" keeps it out of Google search results.
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Page Not Found" description="Sorry, this page could not be found." noindex>
+  <section class="section not-found">
+    <div class="container">
+      <span class="eyebrow">Error 404</span>
+      <h1>This room doesn't exist</h1>
+      <p class="lead">The page you're looking for may have moved. Let's get you somewhere cosy.</p>
+      <a href="/" class="btn btn--primary">Back to the homepage</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found .container {
+    display: grid;
+    gap: var(--space-md);
+    justify-items: center;
+    text-align: center;
+  }
+</style>

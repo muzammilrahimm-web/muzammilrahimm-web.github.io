@@ -1,0 +1,18 @@
+---
+// ColorPalette: shows an idea's colours as swatches with names and hex codes.
+import '../../styles/ideas.css';
+
+const { colors = [], label = 'Color palette' } = Astro.props;
+---
+
+<ul class="palette" aria-label={label}>
+  {
+    colors.map((c) => (
+      <li class="palette__swatch">
+        <span class="palette__color" style={`background:${c.hex}`} aria-hidden="true" />
+        <span class="palette__name">{c.name}</span>
+        <span class="palette__hex">{c.hex}</span>
+      </li>
+    ))
+  }
+</ul>

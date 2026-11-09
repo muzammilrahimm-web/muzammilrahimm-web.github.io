@@ -1,0 +1,109 @@
+---
+// Hero: the large opening section of the homepage.
+import { Image } from 'astro:assets';
+
+const {
+  eyebrow,
+  title,
+  subtitle,
+  ctaLabel,
+  ctaHref,
+  image,
+  imageAlt,
+} = Astro.props;
+---
+
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__content">
+      {eyebrow && <span class="eyebrow">{eyebrow}</span>}
+      <h1 class="hero__title">{title}</h1>
+      <p class="lead">{subtitle}</p>
+      <div class="hero__actions">
+        <a href={ctaHref} class="btn btn--primary">
+          {ctaLabel}
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero__media">
+      <Image
+        src={image}
+        alt={imageAlt}
+        widths={[480, 800, 1200, 1600]}
+        sizes="(min-width: 1024px) 55vw, 100vw"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: var(--space-lg) var(--space-2xl);
+  }
+
+  .hero__inner {
+    display: grid;
+    gap: var(--space-lg);
+    align-items: center;
+  }
+
+  .hero__content {
+    display: grid;
+    gap: var(--space-md);
+    justify-items: start;
+  }
+
+  .hero__title {
+    max-width: 14ch;
+  }
+
+  .hero__actions {
+    margin-top: var(--space-xs);
+  }
+
+  .hero__media {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background: var(--beige);
+  }
+
+  /* Soft sage accent shape behind the photo */
+  .hero__media::after {
+    content: '';
+    position: absolute;
+    inset: auto auto 0 0;
+    width: 38%;
+    height: 10px;
+    background: var(--sage);
+  }
+
+  .hero__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (min-width: 1024px) {
+    .hero {
+      padding-top: var(--space-xl);
+    }
+
+    .hero__inner {
+      grid-template-columns: 1fr 1.25fr;
+      gap: var(--space-xl);
+    }
+
+    .hero__media {
+      aspect-ratio: 5 / 6;
+      max-height: 680px;
+    }
+  }
+</style>

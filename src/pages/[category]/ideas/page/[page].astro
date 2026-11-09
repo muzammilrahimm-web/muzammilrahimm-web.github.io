@@ -1,0 +1,32 @@
+---
+// /<category>/ideas/page/2, /page/3 ...: created automatically
+// once a category has more ideas than fit on one page.
+import IdeasArchive from '../../../../components/ideas/IdeasArchive.astro';
+import { CATEGORIES } from '../../../../data/content.js';
+import { IDEAS_PAGE_SIZE } from '../../../../data/ideas.js';
+import { getIdeas } from '../../../../lib/ideas.js';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const category of CATEGORIES) {
+    const ideas = await getIdeas(category.slug);
+    const totalPages = Math.ceil(ideas.length / IDEAS_PAGE_SIZE);
+    for (let page = 2; page <= totalPages; page++) {
+      paths.push({
+        params: { category: category.slug, page: String(page) },
+        props: {
+          category,
+          page,
+          totalPages,
+          ideas: ideas.slice((page - 1) * IDEAS_PAGE_SIZE, page * IDEAS_PAGE_SIZE),
+        },
+      });
+    }
+  }
+  return paths;
+}
+
+const { category, page, totalPages, ideas } = Astro.props;
+---
+
+<IdeasArchive category={category} ideas={ideas} page={page} totalPages={totalPages} />

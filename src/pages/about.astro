@@ -1,0 +1,349 @@
+---
+// /about: About Nestora
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import { CATEGORIES } from '../data/content.js';
+import heroImage from '../assets/images/neutral-living-room.jpg';
+import focusImage from '../assets/images/floating-shelves.jpg';
+
+const learnIcons = {
+  bedroom: 'M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M3 18v2m18-2v2M6 10V7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3',
+  kitchen: 'M4 10h16v10H4zM4 14h16M9 6V4m6 2V4M8 17h1m6 0h1',
+  closet: 'M5 3h14v18H5zM12 3v18M10 11v2m4-2v2',
+  'small-spaces': 'M3 11 12 4l9 7M5 10v10h14V10M10 20v-5h4v5',
+};
+---
+
+<BaseLayout
+  title="About Us"
+  description="Nestora shares practical home decor and small-space organization ideas for homes in the United States and United Kingdom. Learn about our mission and vision."
+>
+  <PageHero
+    eyebrow="About us"
+    title="Small homes, beautifully organized"
+    intro="Nestora is an independent home decor and organization journal for people who want calm, comfortable homes, whatever their size."
+    image={heroImage}
+    imageAlt="Neutral living room with a cream sectional sofa, round wooden coffee table, woven pouf and a gallery of wall decor"
+  />
+
+  <!-- Introduction -->
+  <section class="section" aria-labelledby="intro-title">
+    <div class="container intro">
+      <div>
+        <span class="eyebrow">Welcome to Nestora</span>
+        <h2 id="intro-title">A home should work for you, not the other way around</h2>
+      </div>
+      <div class="intro__text">
+        <p>
+          Many of us live in apartments, flats and starter homes where every square foot counts.
+          Nestora brings together simple, practical ideas to help those spaces feel open, organized
+          and personal.
+        </p>
+        <p>
+          We focus on ideas you can actually use: storage that fits real rooms, routines that take
+          minutes rather than weekends, and decor that makes a small space feel like home. Our
+          guides are written for readers in both the United States and the United Kingdom, so you'll
+          see closets and wardrobes, cabinets and cupboards side by side.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission & vision -->
+  <section class="section section--beige" aria-labelledby="purpose-title">
+    <div class="container">
+      <SectionHeading eyebrow="Our purpose" title="Mission and vision" id="purpose-title" align="center" />
+      <div class="grid grid--2 purpose">
+        <article class="purpose__card">
+          <span class="purpose__label">Our mission</span>
+          <h3>Make organizing simple and achievable</h3>
+          <p>
+            To share clear, honest and practical home organization and decor ideas that help anyone
+            create a calmer home, without needing a big budget, a big house or a big weekend.
+          </p>
+        </article>
+        <article class="purpose__card purpose__card--sage">
+          <span class="purpose__label">Our vision</span>
+          <h3>Every space can feel like home</h3>
+          <p>
+            We imagine a world where small spaces are celebrated, not apologised for: homes that are
+            easy to live in, easy to keep tidy and full of personality.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- What you'll learn -->
+  <section class="section" aria-labelledby="learn-title">
+    <div class="container">
+      <SectionHeading
+        eyebrow="On Nestora"
+        title="What you can learn here"
+        intro="Room-by-room guides, step-by-step articles and simple habits that keep a home organized."
+        id="learn-title"
+      />
+      <ul class="learn">
+        {
+          CATEGORIES.map((c) => (
+            <li class="learn__item">
+              <span class="learn__icon" aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24">
+                  <path d={learnIcons[c.slug]} fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <h3 class="learn__title">
+                <a href={c.href}>{c.title}</a>
+              </h3>
+              <p>{c.blurb}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Small-space focus -->
+  <section class="section section--beige" aria-labelledby="focus-title">
+    <div class="container focus">
+      <div class="focus__media">
+        <Image
+          src={focusImage}
+          alt="Living room wall with wooden floating shelves, a framed artwork, small plants and a low media unit"
+          widths={[480, 800, 1100]}
+          sizes="(min-width: 1024px) 50vw, 100vw"
+        />
+      </div>
+      <div class="focus__text">
+        <span class="eyebrow">Our focus</span>
+        <h2 id="focus-title">Made for small-space living</h2>
+        <p class="lead">
+          Small rooms need different ideas. Everything we share is chosen with compact homes in mind.
+        </p>
+        <ul class="focus__list">
+          <li><strong>Edit first.</strong> Owning less is the easiest way to make a room feel bigger.</li>
+          <li><strong>Go vertical.</strong> Walls, doors and the space under the bed are valuable storage.</li>
+          <li><strong>Choose hard-working furniture.</strong> Pieces that store, fold or do two jobs.</li>
+          <li><strong>Keep it calm.</strong> Soft colours, natural textures and clear surfaces.</li>
+          <li><strong>Make it easy to maintain.</strong> Small daily habits beat big yearly clear-outs.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to action -->
+  <section class="section" aria-labelledby="start-title">
+    <div class="container start">
+      <span class="eyebrow">Get started</span>
+      <h2 id="start-title">Ready to make your space feel like home?</h2>
+      <p class="lead">Start with our latest articles, or get in touch with a question or idea.</p>
+      <div class="start__actions">
+        <a href="/blog" class="btn btn--primary">Read the blog</a>
+        <a href="/contact" class="btn btn--ghost">Contact us</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Introduction */
+  .intro {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .intro h2 {
+    margin-top: var(--space-sm);
+  }
+
+  .intro__text {
+    display: grid;
+    gap: var(--space-sm);
+    font-size: 1.075rem;
+    color: var(--ink-soft);
+  }
+
+  @media (min-width: 960px) {
+    .intro {
+      grid-template-columns: 1fr 1.1fr;
+      gap: var(--space-xl);
+    }
+  }
+
+  /* Mission & vision */
+  .purpose__card {
+    display: grid;
+    align-content: start;
+    gap: var(--space-sm);
+    padding: clamp(1.75rem, 4vw, 3rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--ivory-soft);
+    transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+
+  .purpose__card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+  }
+
+  .purpose__card--sage {
+    background: var(--sage-light);
+    border-color: transparent;
+  }
+
+  .purpose__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--sage-dark);
+  }
+
+  .purpose__card p {
+    color: var(--ink-soft);
+  }
+
+  /* What you'll learn */
+  .learn {
+    display: grid;
+    gap: var(--space-md);
+    list-style: none;
+    padding: 0;
+  }
+
+  @media (min-width: 640px) {
+    .learn { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .learn { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .learn__item {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    padding: var(--space-md);
+    border-top: 2px solid var(--sage);
+    transition: background-color 0.3s var(--ease);
+  }
+
+  .learn__item:hover {
+    background: var(--ivory-soft);
+  }
+
+  .learn__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    background: var(--sage-light);
+    color: var(--sage-darker);
+  }
+
+  .learn__title {
+    font-size: 1.4rem;
+  }
+
+  .learn__title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .learn__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .learn__item p {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  /* Small-space focus */
+  .focus {
+    display: grid;
+    gap: var(--space-lg);
+    align-items: center;
+  }
+
+  .focus__media {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    aspect-ratio: 4 / 3;
+    background: var(--beige-deep);
+  }
+
+  .focus__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .focus__text {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .focus__list {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: var(--space-xs);
+    padding: 0;
+    list-style: none;
+  }
+
+  .focus__list li {
+    padding-left: 1.6rem;
+    position: relative;
+    color: var(--ink-soft);
+  }
+
+  .focus__list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 0.7rem;
+    height: 1px;
+    background: var(--sage-dark);
+  }
+
+  .focus__list strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  @media (min-width: 1024px) {
+    .focus {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-xl);
+    }
+  }
+
+  /* Call to action */
+  .start {
+    display: grid;
+    gap: var(--space-sm);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .start .lead {
+    margin-inline: auto;
+  }
+
+  .start__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: var(--space-xs);
+  }
+</style>

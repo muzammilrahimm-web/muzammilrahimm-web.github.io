@@ -1,0 +1,159 @@
+---
+// /blog: lists all published articles (newest first), with search and category filters.
+// The header search sends visitors here as /blog?q=their+search.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { CATEGORIES } from '../data/content.js';
+import { getPosts, toCardProps } from '../lib/blog.js';
+
+const posts = await getPosts();
+---
+
+<BaseLayout
+  title="Blog: Small-Space Organization & Decor Articles"
+  description="Read Nestora articles on small bedroom, kitchen, closet and apartment organization. Search or filter practical home decor ideas by room."
+>
+  <PageHero
+    eyebrow="The Nestora journal"
+    title="Ideas for every room"
+    intro="Practical decor and organization articles for small homes. Search by keyword or filter by room."
+  >
+    <form class="blog-search" action="/blog" method="get" role="search" data-blog-search>
+      <label for="blog-search-input" class="visually-hidden">Search articles</label>
+      <input id="blog-search-input" class="input" type="search" name="q" placeholder="Search articles…" autocomplete="off" />
+      <button type="submit" class="btn btn--primary">Search</button>
+    </form>
+  </PageHero>
+
+  <section class="section" aria-labelledby="articles-title">
+    <div class="container">
+      <h2 id="articles-title" class="visually-hidden">All articles</h2>
+
+      <div class="filters" role="group" aria-label="Filter articles by room">
+        <button type="button" class="filter" aria-pressed="true" data-filter="all">All</button>
+        {
+          CATEGORIES.map((c) => (
+            <button type="button" class="filter" aria-pressed="false" data-filter={c.slug}>
+              {c.name}
+            </button>
+          ))
+        }
+      </div>
+
+      <p class="results" role="status" data-results></p>
+
+      <div class="grid grid--3" data-article-list>
+        {posts.map((post, i) => <ArticleCard {...toCardProps(post)} headingLevel={3} loading={i < 3 ? 'eager' : 'lazy'} />)}
+      </div>
+
+      <p class="no-results" hidden data-no-results>
+        No articles match yet. Try another word or room, or <a href="/blog">view all articles</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Simple search and filter for the article cards on this page.
+  const input = document.querySelector('#blog-search-input');
+  const form = document.querySelector('[data-blog-search]');
+  const cards = [...document.querySelectorAll('[data-article]')];
+  const filterButtons = [...document.querySelectorAll('[data-filter]')];
+  const results = document.querySelector('[data-results]');
+  const noResults = document.querySelector('[data-no-results]');
+
+  let activeFilter = 'all';
+  input.value = new URLSearchParams(window.location.search).get('q') || '';
+
+  function update() {
+    const query = input.value.trim().toLowerCase();
+    let visible = 0;
+
+    cards.forEach((card) => {
+      const matchesFilter = activeFilter === 'all' || card.dataset.category === activeFilter;
+      const matchesQuery = !query || card.dataset.search.includes(query);
+      const show = matchesFilter && matchesQuery;
+      card.hidden = !show;
+      if (show) visible++;
+    });
+
+    noResults.hidden = visible > 0;
+    results.textContent = query
+      ? `${visible} result${visible === 1 ? '' : 's'} for “${input.value.trim()}”`
+      : '';
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const url = new URL(window.location.href);
+    const q = input.value.trim();
+    if (q) url.searchParams.set('q', q);
+    else url.searchParams.delete('q');
+    history.replaceState(null, '', url);
+    update();
+  });
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      activeFilter = button.dataset.filter;
+      filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+      update();
+    });
+  });
+
+  update();
+</script>
+
+<style>
+  .blog-search {
+    display: flex;
+    gap: 0.6rem;
+    width: 100%;
+    max-width: 560px;
+    margin-top: var(--space-xs);
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  .filter {
+    min-height: 40px;
+    padding: 0.45rem 1.1rem;
+    border: 1px solid var(--beige-deep);
+    border-radius: 999px;
+    background: var(--ivory-soft);
+    font-size: 0.9rem;
+    color: var(--ink);
+    transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease);
+  }
+
+  .filter:hover {
+    border-color: var(--sage);
+  }
+
+  .filter[aria-pressed='true'] {
+    background: var(--sage-dark);
+    border-color: var(--sage-dark);
+    color: var(--white);
+  }
+
+  .results:empty {
+    display: none;
+  }
+
+  .results {
+    margin-bottom: var(--space-md);
+    color: var(--ink-soft);
+  }
+
+  .no-results {
+    padding: var(--space-lg) 0;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+</style>

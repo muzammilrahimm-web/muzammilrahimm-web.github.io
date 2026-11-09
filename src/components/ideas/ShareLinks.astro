@@ -1,0 +1,107 @@
+---
+// ShareLinks: real share links for Pinterest, Facebook, X, WhatsApp and email,
+// plus a "Copy link" button. They share the page's canonical URL, which uses
+// the site address from src/config/site.js (update it before launch).
+const { url, title, image } = Astro.props;
+
+const u = encodeURIComponent(url);
+const t = encodeURIComponent(title);
+const links = [
+  { name: 'Pinterest', href: `https://www.pinterest.com/pin/create/button/?url=${u}&media=${encodeURIComponent(image ?? '')}&description=${t}` },
+  { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${u}` },
+  { name: 'X', href: `https://twitter.com/intent/tweet?url=${u}&text=${t}` },
+  { name: 'WhatsApp', href: `https://wa.me/?text=${t}%20${u}` },
+  { name: 'Email', href: `mailto:?subject=${t}&body=${u}`, sameTab: true },
+];
+---
+
+<div class="share">
+  <p class="share__label">Share this idea</p>
+  <ul class="share__list">
+    {
+      links.map((l) => (
+        <li>
+          <a
+            class="share__btn"
+            href={l.href}
+            target={l.sameTab ? undefined : '_blank'}
+            rel={l.sameTab ? undefined : 'noopener noreferrer'}
+          >
+            {l.name}
+            {!l.sameTab && <span class="visually-hidden"> (opens in a new tab)</span>}
+          </a>
+        </li>
+      ))
+    }
+    <li>
+      <button type="button" class="share__btn" data-copy-link={url}>Copy link</button>
+    </li>
+  </ul>
+  <p class="share__status" role="status" aria-live="polite" data-copy-status></p>
+</div>
+
+<script>
+  document.querySelectorAll('[data-copy-link]').forEach((button) => {
+    const status = button.closest('.share')?.querySelector('[data-copy-status]');
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copyLink);
+        if (status) status.textContent = 'Link copied.';
+      } catch {
+        if (status) status.textContent = 'Could not copy automatically. Please copy the address from your browser.';
+      }
+    });
+  });
+</script>
+
+<style>
+  .share {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .share__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .share__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .share__btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--beige-deep);
+    border-radius: 999px;
+    background: var(--ivory-soft);
+    font-size: 0.85rem;
+    color: var(--ink);
+    text-decoration: none;
+    transition: background-color 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
+  }
+
+  .share__btn:hover {
+    border-color: var(--sage-dark);
+    background: var(--sage-dark);
+    color: var(--white);
+  }
+
+  .share__status:empty {
+    display: none;
+  }
+
+  .share__status {
+    font-size: 0.85rem;
+    color: var(--sage-dark);
+  }
+</style>

@@ -1,0 +1,140 @@
+---
+// FeaturedIdea: large editorial card for a category's featured design idea.
+import { Image } from 'astro:assets';
+import { ideaUrl } from '../../lib/ideas.js';
+import { typeLabel, sizeLabel, budgetLabel } from '../../data/ideas.js';
+
+const { idea } = Astro.props;
+const { data } = idea;
+---
+
+<article class="featured-idea">
+  <div class="featured-idea__media">
+    <Image src={data.cover} alt={data.coverAlt} widths={[600, 900, 1300]} sizes="(min-width: 1024px) 55vw, 100vw" />
+  </div>
+  <div class="featured-idea__body">
+    <span class="eyebrow">Featured design · {data.designStyle}</span>
+    <h3 class="featured-idea__title"><a href={ideaUrl(idea)}>{data.title}</a></h3>
+    <p class="featured-idea__desc">{data.description}</p>
+
+    <ul class="featured-idea__swatches" aria-label="Colour palette">
+      {data.palette.map((c) => <li style={`background:${c.hex}`} title={c.name}><span class="visually-hidden">{c.name}</span></li>)}
+    </ul>
+
+    <dl class="featured-idea__facts">
+      <div><dt>Room size</dt><dd>{sizeLabel(data.roomSize)}</dd></div>
+      <div><dt>Budget</dt><dd>{budgetLabel(data.budget)}</dd></div>
+      <div><dt>Ideal for</dt><dd>{data.types.slice(0, 2).map(typeLabel).join(', ')}</dd></div>
+    </dl>
+
+    <a href={ideaUrl(idea)} class="btn btn--primary featured-idea__btn">
+      View this design<span class="visually-hidden">: {data.title}</span>
+    </a>
+  </div>
+</article>
+
+<style>
+  .featured-idea {
+    display: grid;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--ivory-soft);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+
+  .featured-idea__media {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background: var(--cat-deep, var(--beige));
+  }
+
+  .featured-idea__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.8s var(--ease);
+  }
+
+  .featured-idea:hover .featured-idea__media :global(img) {
+    transform: scale(1.03);
+  }
+
+  .featured-idea__body {
+    display: grid;
+    align-content: center;
+    gap: var(--space-sm);
+    padding: clamp(1.5rem, 4vw, 3.25rem);
+  }
+
+  .featured-idea__title {
+    font-size: clamp(1.9rem, 3.5vw, 2.7rem);
+  }
+
+  .featured-idea__title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .featured-idea__title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+  }
+
+  .featured-idea__desc {
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+  }
+
+  .featured-idea__swatches {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .featured-idea__swatches li {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--ivory-soft);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  .featured-idea__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 0;
+  }
+
+  .featured-idea__facts dt {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sage-dark);
+  }
+
+  .featured-idea__facts dd {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .featured-idea__btn {
+    justify-self: start;
+    margin-top: var(--space-xs);
+  }
+
+  @media (min-width: 1024px) {
+    .featured-idea {
+      grid-template-columns: 1.2fr 1fr;
+    }
+
+    .featured-idea__media {
+      aspect-ratio: auto;
+      min-height: 520px;
+    }
+  }
+</style>

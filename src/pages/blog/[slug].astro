@@ -1,0 +1,306 @@
+---
+// Individual article page: /blog/article-name
+// Astro creates one page for every Markdown file in src/content/blog.
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import Newsletter from '../../components/Newsletter.astro';
+import { SITE } from '../../config/site.js';
+import { getCategory } from '../../data/content.js';
+import { getPosts, getRelated, formatDate, readingTime, toCardProps } from '../../lib/blog.js';
+import IdeaCard from '../../components/ideas/IdeaCard.astro';
+import { getIdeas } from '../../lib/ideas.js';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post, posts },
+  }));
+}
+
+const { post, posts } = Astro.props;
+const { data } = post;
+const { Content } = await render(post);
+
+const category = getCategory(data.category);
+const related = getRelated(posts, post, 3);
+const relatedIdeas = (await getIdeas(data.category)).slice(0, 3);
+const minutes = readingTime(post.body);
+const isoDate = data.pubDate.toISOString().slice(0, 10);
+const pageURL = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
+
+// Structured data so search engines understand this is an article.
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: data.title,
+    description: data.description,
+    datePublished: data.pubDate.toISOString(),
+    dateModified: (data.updatedDate ?? data.pubDate).toISOString(),
+    mainEntityOfPage: pageURL,
+    articleSection: category.title,
+    inLanguage: 'en',
+    author: { '@type': 'Organization', name: SITE.name },
+    publisher: { '@type': 'Organization', name: SITE.name },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site ?? SITE.url).href },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: new URL('/blog', Astro.site ?? SITE.url).href },
+      { '@type': 'ListItem', position: 3, name: data.title, item: pageURL },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.description}
+  image={data.cover}
+  type="article"
+  article={{ publishedTime: data.pubDate, modifiedTime: data.updatedDate, section: category.title }}
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(schema)} />
+
+  <article class="post">
+    <header class="post__header">
+      <div class="container post__header-inner">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href={category.href}>{category.name}</a></li>
+          </ol>
+        </nav>
+
+        <a href={category.href} class="eyebrow post__category">{category.title}</a>
+        <h1 class="post__title">{data.title}</h1>
+        <p class="lead post__lead">{data.description}</p>
+
+        <p class="post__meta">
+          <span>By the Nestora team</span>
+          <span aria-hidden="true">·</span>
+          <time datetime={isoDate}>{formatDate(data.pubDate)}</time>
+          <span aria-hidden="true">·</span>
+          <span>{minutes} min read</span>
+        </p>
+      </div>
+    </header>
+
+    <div class="container">
+      <figure class="post__cover">
+        <Image
+          src={data.cover}
+          alt={data.coverAlt}
+          widths={[600, 900, 1200, 1600]}
+          sizes="(min-width: 1240px) 1160px, 100vw"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
+
+      <div class="post__body">
+        <Content />
+      </div>
+
+      <aside class="post__cta" aria-label="Explore this category">
+        <span class="eyebrow">Keep exploring</span>
+        <p class="post__cta-title">More ideas in {category.title}</p>
+        <a href={category.href} class="btn btn--primary">View the {category.name.toLowerCase()} guide</a>
+      </aside>
+    </div>
+  </article>
+
+  {
+    relatedIdeas.length > 0 && (
+      <section class="section" aria-labelledby="ideas-title">
+        <div class="container">
+          <SectionHeading eyebrow="Get inspired" title={`${category.name} design ideas`} id="ideas-title" />
+          <div class="idea-masonry">
+            {relatedIdeas.map((idea) => <IdeaCard idea={idea} />)}
+          </div>
+          <div class="post__ideas-cta">
+            <a href={`${category.href}#ideas`} class="btn btn--ghost">See all {category.name.toLowerCase()} ideas</a>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    related.length > 0 && (
+      <section class="section section--beige" aria-labelledby="related-title">
+        <div class="container">
+          <SectionHeading eyebrow="Read next" title="Related articles" id="related-title" />
+          <div class="grid grid--3">
+            {related.map((p) => <ArticleCard {...toCardProps(p)} />)}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <Newsletter />
+</BaseLayout>
+
+<style>
+  .post__header {
+    padding-block: var(--space-lg) var(--space-xl);
+  }
+
+  .post__header-inner {
+    display: grid;
+    gap: var(--space-sm);
+    justify-items: center;
+    max-width: 860px;
+    text-align: center;
+  }
+
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    list-style: none;
+    padding: 0;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .breadcrumb li + li::before {
+    content: '/';
+    margin-right: 0.4rem;
+    color: var(--beige-deep);
+  }
+
+  .breadcrumb a {
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--sage-dark);
+    text-decoration: underline;
+  }
+
+  .post__category {
+    margin-top: var(--space-sm);
+    text-decoration: none;
+  }
+
+  .post__title {
+    font-size: clamp(2.3rem, 5.5vw, 4rem);
+  }
+
+  .post__lead {
+    margin-inline: auto;
+  }
+
+  .post__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .post__cover {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    aspect-ratio: 16 / 9;
+    background: var(--beige);
+  }
+
+  .post__cover :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ---------- Readable article text ---------- */
+  .post__body {
+    max-width: 68ch;
+    margin: var(--space-xl) auto 0;
+    font-size: 1.075rem;
+    line-height: 1.8;
+  }
+
+  .post__body :global(> * + *) {
+    margin-top: 1.15rem;
+  }
+
+  .post__body :global(> p:first-child) {
+    font-size: 1.2rem;
+    color: var(--ink);
+  }
+
+  .post__body :global(h2) {
+    margin-top: 2.75rem;
+    font-size: clamp(1.75rem, 3vw, 2.2rem);
+  }
+
+  .post__body :global(h3) {
+    margin-top: 1.9rem;
+    font-size: clamp(1.35rem, 2.2vw, 1.55rem);
+  }
+
+  .post__body :global(h2 + *),
+  .post__body :global(h3 + *) {
+    margin-top: 0.7rem;
+  }
+
+  .post__body :global(ul),
+  .post__body :global(ol) {
+    padding-left: 1.4rem;
+  }
+
+  .post__body :global(li + li) {
+    margin-top: 0.45rem;
+  }
+
+  .post__body :global(li::marker) {
+    color: var(--sage-dark);
+  }
+
+  .post__body :global(strong) {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .post__body :global(a) {
+    color: var(--sage-dark);
+    text-decoration-thickness: 1px;
+  }
+
+  .post__cta {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: center;
+    max-width: 68ch;
+    margin: var(--space-xl) auto var(--space-2xl);
+    padding: var(--space-lg) var(--space-md);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+  }
+
+  .post__ideas-cta {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-sm);
+  }
+
+  .post__cta-title {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+</style>

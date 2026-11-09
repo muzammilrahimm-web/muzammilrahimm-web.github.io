@@ -1,0 +1,17 @@
+---
+// /<category>/ideas: page 1 of the "all ideas" archive.
+import IdeasArchive from '../../../components/ideas/IdeasArchive.astro';
+import { CATEGORIES } from '../../../data/content.js';
+import { IDEAS_PAGE_SIZE } from '../../../data/ideas.js';
+import { getIdeas } from '../../../lib/ideas.js';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((category) => ({ params: { category: category.slug }, props: { category } }));
+}
+
+const { category } = Astro.props;
+const ideas = await getIdeas(category.slug);
+const totalPages = Math.max(1, Math.ceil(ideas.length / IDEAS_PAGE_SIZE));
+---
+
+<IdeasArchive category={category} ideas={ideas.slice(0, IDEAS_PAGE_SIZE)} page={1} totalPages={totalPages} />

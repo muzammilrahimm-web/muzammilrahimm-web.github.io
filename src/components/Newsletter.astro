@@ -1,0 +1,105 @@
+---
+// Newsletter: email sign-up DESIGN ONLY.
+// No email is sent, collected or stored anywhere. A real email service
+// (with a privacy notice and consent) must be connected before launch.
+---
+
+<section class="newsletter" aria-labelledby="newsletter-title">
+  <div class="container">
+    <div class="newsletter__card">
+      <div class="newsletter__text">
+        <span class="eyebrow">The Nestora letter</span>
+        <h2 id="newsletter-title">Fresh ideas for a calmer home</h2>
+        <p>
+          Seasonal decor inspiration and simple organization tips, delivered to your inbox.
+        </p>
+      </div>
+
+      <form class="newsletter__form" method="post" novalidate data-validate data-newsletter>
+        <div class="field">
+          <label for="newsletter-email">Email address</label>
+          <div class="newsletter__row">
+            <input
+              id="newsletter-email"
+              class="input"
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+              data-label="Email address"
+              aria-describedby="newsletter-email-error newsletter-note"
+            />
+            <button type="submit" class="btn btn--primary">Subscribe</button>
+          </div>
+          <p class="field-error" id="newsletter-email-error" aria-live="polite"></p>
+        </div>
+        <p class="newsletter__note" id="newsletter-note">
+          Coming soon: the newsletter is not live yet. This form is a design preview and does not
+          collect or store your email address.
+        </p>
+        <p class="form-status" data-form-status role="status" hidden></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initForms } from '../scripts/forms.js';
+  initForms();
+</script>
+
+<style>
+  .newsletter {
+    padding-block: var(--space-2xl);
+  }
+
+  .newsletter__card {
+    display: grid;
+    gap: var(--space-lg);
+    align-items: center;
+    padding: clamp(2rem, 6vw, 4.5rem);
+    border-radius: var(--radius-lg);
+    background: var(--sage-light);
+    background-image: radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.55), transparent 55%);
+  }
+
+  .newsletter__text {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .newsletter__text p {
+    color: var(--ink-soft);
+    max-width: 44ch;
+  }
+
+  .newsletter__form {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .newsletter__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .newsletter__note {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  @media (min-width: 560px) {
+    .newsletter__row {
+      flex-direction: row;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .newsletter__card {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-xl);
+    }
+  }
+</style>

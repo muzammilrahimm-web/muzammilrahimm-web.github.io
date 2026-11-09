@@ -1,0 +1,362 @@
+---
+// IdeaBrowser: search + filters (type, room size, budget) + "Load more"
+// for one category's design ideas.
+//
+// How it scales:
+// - The page itself only contains the first IDEAS_PAGE_SIZE ideas.
+// - Filtering, searching or "Load more" downloads a small JSON file
+//   (/<category>/ideas.json) with every idea's card details, and shows
+//   the results in batches. Full idea pages are never loaded in bulk.
+// - Without JavaScript, "Load more" is a normal link to /<category>/ideas/page/2.
+import IdeaCard from './IdeaCard.astro';
+import '../../styles/ideas.css';
+import { IDEA_TYPES, ROOM_SIZES, BUDGETS, IDEAS_PAGE_SIZE } from '../../data/ideas.js';
+
+const { category, ideas, title = 'Latest ideas', eyebrow = 'Browse all', id = 'ideas' } = Astro.props;
+
+const firstPage = ideas.slice(0, IDEAS_PAGE_SIZE);
+const total = ideas.length;
+// Only show type chips that have at least one idea (with real counts).
+const typeCounts = IDEA_TYPES.map((t) => ({
+  ...t,
+  count: ideas.filter((i) => i.data.types.includes(t.slug)).length,
+})).filter((t) => t.count > 0);
+const feedUrl = `/${category.slug}/ideas.json`;
+const nextPageUrl = `/${category.slug}/ideas/page/2`;
+const headingId = `${id}-title`;
+---
+
+<section class="section idea-browser" id={id} aria-labelledby={headingId} data-idea-browser data-feed={feedUrl} data-page-size={IDEAS_PAGE_SIZE}>
+  <div class="container">
+    <div class="idea-browser__head">
+      <div>
+        <span class="eyebrow">{eyebrow}</span>
+        <h2 id={headingId}>{title}</h2>
+        <p class="lead">Newest first. Search, or filter by style, room size and budget.</p>
+      </div>
+    </div>
+
+    <form class="idea-browser__controls" role="search" data-controls onsubmit="return false">
+      <div class="idea-browser__search">
+        <label for={`${id}-q`} class="visually-hidden">Search {category.name.toLowerCase()} ideas</label>
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="m20 20-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+        <input id={`${id}-q`} class="input" type="search" name="q" placeholder={`Search ${category.name.toLowerCase()} ideas…`} autocomplete="off" data-q />
+      </div>
+
+      <div class="idea-browser__selects">
+        <div class="field">
+          <label for={`${id}-size`}>Room size</label>
+          <select id={`${id}-size`} class="input" name="size" data-size>
+            <option value="">Any size</option>
+            {ROOM_SIZES.map((s) => <option value={s.slug}>{s.label}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for={`${id}-budget`}>Budget</label>
+          <select id={`${id}-budget`} class="input" name="budget" data-budget>
+            <option value="">Any budget</option>
+            {BUDGETS.map((b) => <option value={b.slug}>{b.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div class="idea-browser__types" role="group" aria-label="Filter by style and theme">
+        <ul class="idea-chips">
+          <li><button type="button" class="idea-chip" aria-pressed="true" data-type="">All styles</button></li>
+          {
+            typeCounts.map((t) => (
+              <li>
+                <button type="button" class="idea-chip" aria-pressed="false" data-type={t.slug}>
+                  {t.label} <span class="idea-chip__count">({t.count})</span>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </form>
+
+    <div class="idea-browser__status">
+      <p role="status" aria-live="polite" data-status>
+        Showing {firstPage.length} of {total} {total === 1 ? 'idea' : 'ideas'}
+      </p>
+      <button type="button" class="idea-browser__reset" data-reset hidden>Clear filters</button>
+    </div>
+
+    <div class="idea-masonry" data-grid>
+      {firstPage.map((idea) => <IdeaCard idea={idea} />)}
+    </div>
+
+    <p class="idea-browser__empty" data-empty hidden>
+      No ideas match these filters yet. Try fewer filters, or <button type="button" class="idea-browser__reset" data-reset>clear all filters</button>.
+    </p>
+
+    <div class="idea-browser__more">
+      <!-- Only links to page 2 when page 2 really exists (no broken links) -->
+      <a href={total > IDEAS_PAGE_SIZE ? nextPageUrl : undefined} role="button" class="btn btn--ghost" data-load-more hidden={total <= IDEAS_PAGE_SIZE}>Load more ideas</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const roots = document.querySelectorAll('[data-idea-browser]');
+
+  roots.forEach((root) => {
+    const pageSize = Number(root.dataset.pageSize) || 12;
+    const grid = root.querySelector('[data-grid]');
+    const status = root.querySelector('[data-status]');
+    const empty = root.querySelector('[data-empty]');
+    const more = root.querySelector('[data-load-more]');
+    const q = root.querySelector('[data-q]');
+    const size = root.querySelector('[data-size]');
+    const budget = root.querySelector('[data-budget]');
+    const typeButtons = [...root.querySelectorAll('[data-type]')];
+    const resetButtons = [...root.querySelectorAll('[data-reset]')];
+
+    const state = { type: '', size: '', budget: '', q: '', shown: pageSize };
+    let items = null;
+
+    async function loadFeed() {
+      if (items) return items;
+      const response = await fetch(root.dataset.feed);
+      if (!response.ok) throw new Error('Feed not available');
+      items = (await response.json()).items;
+      return items;
+    }
+
+    function matches(item) {
+      if (state.type && !item.types.includes(state.type)) return false;
+      if (state.size && item.roomSize !== state.size) return false;
+      if (state.budget && item.budget !== state.budget) return false;
+      if (state.q) {
+        const text = [item.title, item.description, item.designStyle, ...item.typeLabels].join(' ').toLowerCase();
+        if (!state.q.toLowerCase().split(/\s+/).every((word) => text.includes(word))) return false;
+      }
+      return true;
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    // Builds the same HTML as IdeaCard.astro (text is inserted safely with textContent).
+    function card(item) {
+      const article = el('article', 'idea-card');
+      const link = el('a', 'idea-card__link');
+      link.href = item.url;
+      const media = el('div', 'idea-card__media');
+      const img = document.createElement('img');
+      Object.assign(img, { src: item.image.src, alt: item.image.alt, width: item.image.width, height: item.image.height, loading: 'lazy', decoding: 'async' });
+      media.append(img);
+      const body = el('div', 'idea-card__body');
+      const tags = el('ul', 'idea-card__tags');
+      tags.setAttribute('aria-label', 'Idea types');
+      item.typeLabels.slice(0, 3).forEach((label) => tags.append(el('li', null, label)));
+      body.append(el('span', 'idea-card__meta', item.meta), el('h3', 'idea-card__title', item.title), el('p', 'idea-card__excerpt', item.description), tags);
+      link.append(media, body);
+      article.append(link);
+      return article;
+    }
+
+    function hasFilters() {
+      return Boolean(state.type || state.size || state.budget || state.q);
+    }
+
+    function syncUrl() {
+      const url = new URL(window.location.href);
+      ['type', 'size', 'budget', 'q'].forEach((key) => {
+        if (state[key]) url.searchParams.set(key, state[key]);
+        else url.searchParams.delete(key);
+      });
+      history.replaceState(null, '', url);
+    }
+
+    async function render({ append = false } = {}) {
+      let all;
+      try {
+        all = await loadFeed();
+      } catch {
+        status.textContent = 'Sorry, ideas could not be loaded. Please refresh the page.';
+        return;
+      }
+      const results = all.filter(matches);
+      const visible = results.slice(0, state.shown);
+
+      if (append) {
+        const start = grid.children.length;
+        visible.slice(start).forEach((item) => grid.append(card(item)));
+      } else {
+        grid.replaceChildren(...visible.map(card));
+      }
+
+      status.textContent = `Showing ${visible.length} of ${results.length} ${results.length === 1 ? 'idea' : 'ideas'}`;
+      empty.hidden = results.length > 0;
+      more.hidden = visible.length >= results.length;
+      resetButtons[0].hidden = !hasFilters();
+    }
+
+    function update() {
+      state.shown = pageSize;
+      syncUrl();
+      render();
+    }
+
+    function setType(slug) {
+      state.type = slug;
+      typeButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.type === slug)));
+    }
+
+    typeButtons.forEach((button) =>
+      button.addEventListener('click', () => {
+        setType(button.dataset.type);
+        update();
+      }),
+    );
+
+    size.addEventListener('change', () => { state.size = size.value; update(); });
+    budget.addEventListener('change', () => { state.budget = budget.value; update(); });
+
+    let timer;
+    q.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { state.q = q.value.trim(); update(); }, 250);
+    });
+
+    more.addEventListener('click', (event) => {
+      event.preventDefault();
+      state.shown += pageSize;
+      render({ append: true });
+    });
+
+    resetButtons.forEach((button) =>
+      button.addEventListener('click', () => {
+        Object.assign(state, { size: '', budget: '', q: '' });
+        size.value = '';
+        budget.value = '';
+        q.value = '';
+        setType('');
+        update();
+      }),
+    );
+
+    // Apply filters from the address bar, e.g. /bedroom?type=storage#ideas
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = {
+      type: params.get('type') || '',
+      size: params.get('size') || '',
+      budget: params.get('budget') || '',
+      q: params.get('q') || '',
+    };
+    if (fromUrl.type || fromUrl.size || fromUrl.budget || fromUrl.q) {
+      if (typeButtons.some((b) => b.dataset.type === fromUrl.type)) setType(fromUrl.type);
+      if ([...size.options].some((o) => o.value === fromUrl.size)) state.size = size.value = fromUrl.size;
+      if ([...budget.options].some((o) => o.value === fromUrl.budget)) state.budget = budget.value = fromUrl.budget;
+      state.q = q.value = fromUrl.q;
+      render();
+    }
+  });
+</script>
+
+<style>
+  .idea-browser__head {
+    margin-bottom: var(--space-md);
+  }
+
+  .idea-browser__head h2 {
+    margin-top: 0.5rem;
+  }
+
+  .idea-browser__head .lead {
+    margin-top: 0.5rem;
+  }
+
+  .idea-browser__controls {
+    display: grid;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--ivory-soft);
+  }
+
+  .idea-browser__search {
+    position: relative;
+  }
+
+  .idea-browser__search svg {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+
+  .idea-browser__search .input {
+    padding-left: 2.75rem;
+  }
+
+  .idea-browser__selects {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+  }
+
+  .idea-browser__selects select {
+    appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235e574e' stroke-width='1.6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+  }
+
+  @media (min-width: 900px) {
+    .idea-browser__controls {
+      grid-template-columns: 1.4fr 1fr;
+      align-items: end;
+    }
+
+    .idea-browser__types {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .idea-browser__status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-bottom: var(--space-md);
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+
+  .idea-browser__reset {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--sage-dark);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .idea-browser__empty {
+    padding: var(--space-lg) 0;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  .idea-browser__more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-md);
+  }
+</style>

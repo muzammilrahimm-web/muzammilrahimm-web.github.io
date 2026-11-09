@@ -1,0 +1,105 @@
+---
+// AuthShell: shared two-column frame for Sign up, Log in and Forgot password.
+// Left: interior photo with a short message. Right: the form card.
+import { Image } from 'astro:assets';
+import BackendNotice from './BackendNotice.astro';
+
+const { title, intro, image, imageAlt, quote } = Astro.props;
+---
+
+<section class="auth">
+  <div class="auth__media">
+    <Image src={image} alt={imageAlt} widths={[600, 900, 1200]} sizes="(min-width: 960px) 45vw, 100vw" loading="eager" />
+    {quote && <p class="auth__quote">{quote}</p>}
+  </div>
+
+  <div class="auth__panel">
+    <div class="auth__card">
+      <h1 class="auth__title">{title}</h1>
+      {intro && <p class="auth__intro">{intro}</p>}
+      <BackendNotice />
+      <slot />
+    </div>
+    <slot name="after" />
+  </div>
+</section>
+
+<script>
+  import { initForms } from '../../scripts/forms.js';
+  initForms();
+</script>
+
+<style>
+  .auth {
+    display: grid;
+    min-height: calc(100vh - 72px);
+  }
+
+  .auth__media {
+    position: relative;
+    display: none;
+    background: var(--beige);
+  }
+
+  .auth__media :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .auth__quote {
+    position: absolute;
+    left: var(--space-lg);
+    right: var(--space-lg);
+    bottom: var(--space-lg);
+    padding: var(--space-md);
+    border-radius: var(--radius);
+    background: rgba(250, 247, 240, 0.92);
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-style: italic;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .auth__panel {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: var(--space-md);
+    padding: var(--space-xl) var(--space-sm);
+  }
+
+  .auth__card {
+    display: grid;
+    gap: var(--space-md);
+    width: 100%;
+    max-width: 460px;
+    padding: clamp(1.5rem, 5vw, 2.75rem);
+    background: var(--ivory-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+
+  .auth__title {
+    font-size: clamp(2.2rem, 4vw, 2.75rem);
+  }
+
+  .auth__intro {
+    margin-top: -0.75rem;
+    color: var(--ink-soft);
+  }
+
+  @media (min-width: 960px) {
+    .auth {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .auth__media {
+      display: block;
+    }
+  }
+</style>

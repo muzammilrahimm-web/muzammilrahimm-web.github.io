@@ -1,0 +1,241 @@
+/* =========================================================
+   Design ideas styles (global on purpose: idea cards are also
+   created by JavaScript when visitors click "Load more").
+   ========================================================= */
+
+/* ---------- Pinterest-style masonry grid ---------- */
+.idea-masonry {
+  columns: 1;
+  column-gap: var(--space-md);
+}
+
+@media (min-width: 560px) {
+  .idea-masonry { columns: 2; }
+}
+
+@media (min-width: 1024px) {
+  .idea-masonry { columns: 3; }
+}
+
+.idea-masonry > * {
+  break-inside: avoid;
+  margin-bottom: var(--space-md);
+}
+
+/* ---------- Idea card ---------- */
+.idea-card {
+  position: relative;
+  display: block;
+  background: var(--ivory-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+  animation: idea-in 0.5s var(--ease) both;
+}
+
+.idea-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+
+@keyframes idea-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idea-card { animation: none; transition: none; }
+}
+
+.idea-card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.idea-card__link:hover {
+  color: inherit;
+}
+
+.idea-card__media {
+  position: relative;
+  overflow: hidden;
+  background: var(--beige);
+}
+
+.idea-card__media img {
+  width: 100%;
+  height: auto;
+  transition: transform 0.7s var(--ease);
+}
+
+.idea-card:hover .idea-card__media img {
+  transform: scale(1.04);
+}
+
+.idea-card__badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(250, 247, 240, 0.92);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.idea-card__body {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.1rem 1.2rem 1.25rem;
+}
+
+.idea-card__meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sage-dark);
+}
+
+.idea-card__title {
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.idea-card__excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+
+.idea-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.idea-card__tags li {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--beige);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- Chips (filters and tags) ---------- */
+.idea-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0;
+  list-style: none;
+}
+
+.idea-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 38px;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid var(--beige-deep);
+  border-radius: 999px;
+  background: var(--ivory-soft);
+  font-size: 0.88rem;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.idea-chip:hover {
+  border-color: var(--sage);
+  color: var(--ink);
+}
+
+.idea-chip[aria-pressed='true'] {
+  background: var(--sage-dark);
+  border-color: var(--sage-dark);
+  color: var(--white);
+}
+
+.idea-chip__count {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+/* ---------- Colour palette swatches ---------- */
+.palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.palette__swatch {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.palette__color {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(44, 40, 35, 0.12);
+}
+
+.palette__name {
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.palette__hex {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+/* ---------- Horizontal scrolling strip (trending) ---------- */
+.idea-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(250px, 78%);
+  gap: var(--space-md);
+  overflow-x: auto;
+  padding-bottom: var(--space-sm);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.idea-strip > * {
+  scroll-snap-align: start;
+}
+
+@media (min-width: 640px) {
+  .idea-strip { grid-auto-columns: minmax(260px, 42%); }
+}
+
+@media (min-width: 1024px) {
+  .idea-strip { grid-auto-columns: minmax(260px, calc((100% - 3 * var(--space-md)) / 4)); }
+}
+
+.idea-strip .idea-card__media {
+  aspect-ratio: 4 / 5;
+}
+
+.idea-strip .idea-card__media img {
+  height: 100%;
+  object-fit: cover;
+}
