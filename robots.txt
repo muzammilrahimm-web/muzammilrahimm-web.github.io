@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://muzammilrahimm-web.github.io/sitemap-index.xml
